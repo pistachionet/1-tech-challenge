@@ -27,10 +27,19 @@ type userCreator interface {
 //	@Router			/users [POST]
 func HandleCreateUser(logger *slog.Logger, userCreator userCreator) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        var user models.User
-        if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        user, problems, err := decodeValid[models.User](r)
+        if err != nil {
             logger.ErrorContext(r.Context(), "failed to decode request body", slog.String("error", err.Error()))
             http.Error(w, "Invalid request body", http.StatusBadRequest)
+            return
+        }
+        if len(problems) > 0 {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusBadRequest)
+            if err := json.NewEncoder(w).Encode(problems); err != nil {
+                logger.ErrorContext(r.Context(), "failed to encode response", slog.String("error", err.Error()))
+                http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            }
             return
         }
 
