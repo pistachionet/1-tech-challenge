@@ -29,5 +29,3 @@ func HandleHealthCheck(logger *slog.Logger) http.HandlerFunc {
 		_ = json.NewEncoder(w).Encode(healthResponse{Status: "ok"})
 	}
 }
-
-

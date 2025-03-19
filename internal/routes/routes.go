@@ -1,11 +1,12 @@
 package routes
 
 import (
+	"log/slog"
+	"net/http"
+
 	"github.com/navid/blog/internal/handlers"
 	"github.com/navid/blog/internal/services"
 	"github.com/swaggo/http-swagger" // http-swagger middleware
-	"log/slog"
-	"net/http"
 )
 
 // @title						Blog Service API
@@ -49,5 +50,4 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 
 	// health check
 	mux.Handle("GET /api/health", handlers.HandleHealthCheck(logger))
-
 }

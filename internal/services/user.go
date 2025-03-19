@@ -129,7 +129,6 @@ func (s *UsersService) UpdateUser(ctx context.Context, id uint64, patch models.U
 	}
 
 	return updatedUser, nil
-
 }
 
 // DeleteUser attempts to delete the user with the provided id. An error is
@@ -149,7 +148,7 @@ func (s *UsersService) DeleteUser(ctx context.Context, id uint64) error {
 		return fmt.Errorf("[in services.UsersServices.DeleteUser] failed to delete user: %w", err)
 	}
 
-	//Checks if the user was actually deleted
+	// Checks if the user was actually deleted
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("[in services.UsersService.UpdateUser] failed to get affected rows: %w", err)
@@ -159,13 +158,11 @@ func (s *UsersService) DeleteUser(ctx context.Context, id uint64) error {
 	}
 
 	return nil
-
 }
 
 // ListUsers attempts to list all users in the database. A slice of models.User
 // or an error is returned.
 func (s *UsersService) ListUsers(ctx context.Context, id uint64) ([]models.User, error) {
-
 	s.logger.DebugContext(ctx, "Listing users", "id", id)
 
 	rows, err := s.db.QueryContext(
@@ -196,5 +193,4 @@ func (s *UsersService) ListUsers(ctx context.Context, id uint64) ([]models.User,
 	}
 
 	return users, nil
-
 }

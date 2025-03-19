@@ -29,14 +29,14 @@ func NewUserListerAdapter(service *services.UsersService) userLister {
 	return &userListerAdapter{service: service}
 }
 
-//	@Summary		List Users
-//	@Description	List all users
-//	@Tags			user
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{array}		models.User
-//	@Failure		500	{object}	string
-//	@Router			/users [GET]
+// @Summary		List Users
+// @Description	List all users
+// @Tags			user
+// @Accept			json
+// @Produce		json
+// @Success		200	{array}		models.User
+// @Failure		500	{object}	string
+// @Router			/users [GET]
 func HandleListUsers(logger *slog.Logger, userLister userLister) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		users, err := userLister.ListUsers(r.Context())

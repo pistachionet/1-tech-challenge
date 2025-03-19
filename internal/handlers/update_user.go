@@ -16,18 +16,18 @@ type userUpdater interface {
 	UpdateUser(ctx context.Context, id uint64, user models.User) (models.User, error)
 }
 
-//	@Summary		Update User
-//	@Description	Update an existing user
-//	@Tags			user
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string		true	"User ID"
-//	@Param			user	body		models.User	true	"User"
-//	@Success		200		{object}	models.User
-//	@Failure		400		{object}	string
-//	@Failure		404		{object}	string
-//	@Failure		500		{object}	string
-//	@Router			/users/{id} [PUT]
+// @Summary		Update User
+// @Description	Update an existing user
+// @Tags			user
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string		true	"User ID"
+// @Param			user	body		models.User	true	"User"
+// @Success		200		{object}	models.User
+// @Failure		400		{object}	string
+// @Failure		404		{object}	string
+// @Failure		500		{object}	string
+// @Router			/users/{id} [PUT]
 func HandleUpdateUser(logger *slog.Logger, userUpdater userUpdater) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.URL.Query().Get("id")

@@ -13,15 +13,15 @@ type userDeleter interface {
 	DeleteUser(ctx context.Context, id uint64) error
 }
 
-//	@Summary		Delete User
-//	@Description	Delete a user by ID
-//	@Tags			user
-//	@Param			id	path		string	true	"User ID"
-//	@Success		204	{object}	nil
-//	@Failure		400	{object}	string
-//	@Failure		404	{object}	string
-//	@Failure		500	{object}	string
-//	@Router			/users/{id} [DELETE]
+// @Summary		Delete User
+// @Description	Delete a user by ID
+// @Tags			user
+// @Param			id	path		string	true	"User ID"
+// @Success		204	{object}	nil
+// @Failure		400	{object}	string
+// @Failure		404	{object}	string
+// @Failure		500	{object}	string
+// @Router			/users/{id} [DELETE]
 func HandleDeleteUser(logger *slog.Logger, userDeleter userDeleter) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.URL.Query().Get("id")
