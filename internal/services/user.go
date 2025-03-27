@@ -194,3 +194,44 @@ func (s *UsersService) ListUsers(ctx context.Context, id uint64) ([]models.User,
 
 	return users, nil
 }
+
+// ListUsersWithFilter retrieves all users from the database, optionally filtering by name.
+func (s *UsersService) ListUsersWithFilter(ctx context.Context, name string) ([]models.User, error) {
+	s.logger.DebugContext(ctx, "Listing users with filter", "name", name)
+
+	query := `
+        SELECT id, name, email, password
+        FROM users
+    `
+	var rows *sql.Rows
+	var err error
+
+	if name != "" {
+		// Add a WHERE clause to filter by name
+		query += "WHERE name ILIKE $1::text"
+		rows, err = s.db.QueryContext(ctx, query, "%"+name+"%")
+	} else {
+		// Query all users if no name filter is provided
+		rows, err = s.db.QueryContext(ctx, query)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("[in services.UsersService.ListUsersWithFilter] failed to query users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password); err != nil {
+			return nil, fmt.Errorf("[in services.UsersService.ListUsersWithFilter] failed to scan user: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("[in services.UsersService.ListUsersWithFilter] rows iteration error: %w", err)
+	}
+
+	return users, nil
+}

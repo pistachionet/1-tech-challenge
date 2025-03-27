@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/navid/blog/internal/models"
 )
@@ -37,57 +38,62 @@ type userReader interface {
 //	@Router			/users/{id}  [GET]
 
 func HandleReadUser(logger *slog.Logger, userReader userReader) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        ctx := r.Context()
 
-		// Read id from path parameters
-		idStr := r.PathValue("id")
+        // Extract the "id" from the URL path
+        pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+        if len(pathParts) < 3 {
+            http.Error(w, "Invalid URL", http.StatusBadRequest)
+            return
+        }
+        idStr := pathParts[2]
 
-		// Convert the ID from string to int
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
-			logger.ErrorContext(
-				r.Context(),
-				"failed to parse id from url",
-				slog.String("id", idStr),
-				slog.String("error", err.Error()),
-			)
+        // Convert the ID from string to uint64
+        id, err := strconv.ParseUint(idStr, 10, 64)
+        if err != nil {
+            logger.ErrorContext(
+                r.Context(),
+                "failed to parse id from url",
+                slog.String("id", idStr),
+                slog.String("error", err.Error()),
+            )
 
-			http.Error(w, "Invalid ID", http.StatusBadRequest)
-			return
-		}
+            http.Error(w, "Invalid ID", http.StatusBadRequest)
+            return
+        }
 
-		// Read the user
-		user, err := userReader.ReadUser(ctx, uint64(id))
-		if err != nil {
-			logger.ErrorContext(
-				r.Context(),
-				"failed to read user",
-				slog.String("error", err.Error()),
-			)
+        // Read the user
+        user, err := userReader.ReadUser(ctx, id)
+        if err != nil {
+            logger.ErrorContext(
+                r.Context(),
+                "failed to read user",
+                slog.String("error", err.Error()),
+            )
 
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
+            http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            return
+        }
 
-		// Convert our models.User domain model into a response model.
-		response := readUserResponse{
-			ID:       user.ID,
-			Name:     user.Name,
-			Email:    user.Email,
-			Password: user.Password,
-		}
+        // Convert our models.User domain model into a response model.
+        response := readUserResponse{
+            ID:       user.ID,
+            Name:     user.Name,
+            Email:    user.Email,
+            Password: user.Password,
+        }
 
-		// Encode the response model as JSON
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(response); err != nil {
-			logger.ErrorContext(
-				r.Context(),
-				"failed to encode response",
-				slog.String("error", err.Error()))
+        // Encode the response model as JSON
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        if err := json.NewEncoder(w).Encode(response); err != nil {
+            logger.ErrorContext(
+                r.Context(),
+                "failed to encode response",
+                slog.String("error", err.Error()))
 
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
-	})
+            http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        }
+    })
 }

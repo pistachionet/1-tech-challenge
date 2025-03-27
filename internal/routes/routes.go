@@ -23,31 +23,32 @@ import (
 // @externalDocs.description	OpenAPI
 // @externalDocs.url			https://swagger.io/resources/open-api/
 func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.UsersService, baseURL string) {
+
 	// Create the adapter
 	userLister := handlers.NewUserListerAdapter(usersService)
 
 	// Read a user
-	mux.Handle("GET /api/users/{id}", handlers.HandleReadUser(logger, usersService))
+	mux.Handle("/api/users/", handlers.HandleReadUser(logger, usersService)) // Note: trailing slash for dynamic paths
 
 	// Create a user
-	mux.Handle("POST /api/users", handlers.HandleCreateUser(logger, usersService))
+	mux.Handle("/api/users", handlers.HandleCreateUser(logger, usersService))
 
 	// Update a user
-	mux.Handle("PUT /api/users/{id}", handlers.HandleUpdateUser(logger, usersService))
+	mux.Handle("/api/user/", handlers.HandleUpdateUser(logger, usersService)) // Updated to singular "user"
 
 	// Delete a user
-	mux.Handle("DELETE /api/users/{id}", handlers.HandleDeleteUser(logger, usersService))
+	mux.Handle("/api/users/", handlers.HandleDeleteUser(logger, usersService)) // Note: trailing slash for dynamic paths
 
 	// List users
-	mux.Handle("GET /api/users", handlers.HandleListUsers(logger, userLister))
+	mux.Handle("/api/users", handlers.HandleListUsers(logger, userLister))
 
-	// swagger docs
+	// Swagger docs
 	mux.Handle(
-		"GET /swagger/",
+		"/swagger/",
 		httpSwagger.Handler(httpSwagger.URL(baseURL+"/swagger/doc.json")),
 	)
 	logger.Info("Swagger running", slog.String("url", baseURL+"/swagger/index.html"))
 
-	// health check
-	mux.Handle("GET /api/health", handlers.HandleHealthCheck(logger))
+	// Health check
+	mux.Handle("/api/health", handlers.HandleHealthCheck(logger))
 }
