@@ -28,16 +28,16 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 	userLister := handlers.NewUserListerAdapter(usersService)
 
 	// Read a user
-	mux.Handle("/api/users/", handlers.HandleReadUser(logger, usersService)) // Note: trailing slash for dynamic paths
+	mux.Handle("/api/user/name", handlers.HandleReadUser(logger, usersService)) // Note: trailing slash for dynamic paths
 
 	// Create a user
-	mux.Handle("/api/users", handlers.HandleCreateUser(logger, usersService))
+	mux.Handle("/api/user", handlers.HandleCreateUser(logger, usersService))
 
 	// Update a user
-	mux.Handle("/api/user/", handlers.HandleUpdateUser(logger, usersService)) // Updated to singular "user"
+	mux.Handle("/api/user/update", handlers.HandleUpdateUser(logger, usersService)) // Updated to singular "user"
 
 	// Delete a user
-	mux.Handle("/api/users/", handlers.HandleDeleteUser(logger, usersService)) // Note: trailing slash for dynamic paths
+	mux.Handle("/api/users/delete", handlers.HandleDeleteUser(logger, usersService)) // Note: trailing slash for dynamic paths
 
 	// List users
 	mux.Handle("/api/users", handlers.HandleListUsers(logger, userLister))
