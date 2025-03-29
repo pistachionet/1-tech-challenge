@@ -94,41 +94,31 @@ func (s *UsersService) ReadUser(ctx context.Context, id uint64) (models.User, er
 // updating, it to reflect the properties on the provided patch object. A
 // models.User or an error.
 func (s *UsersService) UpdateUser(ctx context.Context, id uint64, patch models.User) (models.User, error) {
-	s.logger.DebugContext(ctx, "Updating user", "id", id)
+    s.logger.DebugContext(ctx, "Updating user", "id", id)
 
-	result, err := s.db.ExecContext(
-		ctx,
-		`
-	UPDATE users
-	SET name = $1::text, email = $2::text, password = $3::text
-	WHERE id = $4::int
-	`,
-		patch.Name,
-		patch.Email,
-		patch.Password,
-		id,
-	)
-	if err != nil {
-		return models.User{}, fmt.Errorf("[in services.UsersServices.UpdateUser] failed to update user: %w", err)
-	}
+    var updatedUser models.User
+    err := s.db.QueryRowContext(
+        ctx,
+        `
+        UPDATE users 
+        SET name = $2, email = $3, password = $4
+        WHERE id = $1
+        RETURNING id, name, email, password
+        `,
+        id,
+        patch.Name,
+        patch.Email, 
+        patch.Password,
+    ).Scan(&updatedUser.ID, &updatedUser.Name, &updatedUser.Email, &updatedUser.Password)
 
-	// Checks if the user was actually updated
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return models.User{}, fmt.Errorf("[in services.UsersService.UpdateUser] failed to get affected rows: %w", err)
-	}
-	if rowsAffected == 0 {
-		return models.User{}, fmt.Errorf("[in services.UsersService.UpdateUser] no user found with id: %d", id)
-	}
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return models.User{}, fmt.Errorf("no user found with id: %d", id)
+        }
+        return models.User{}, fmt.Errorf("failed to update user: %w", err)
+    }
 
-	updatedUser := models.User{
-		ID:       uint(id),
-		Name:     patch.Name,
-		Email:    patch.Email,
-		Password: patch.Password,
-	}
-
-	return updatedUser, nil
+    return updatedUser, nil
 }
 
 // DeleteUser attempts to delete the user with the provided id. An error is

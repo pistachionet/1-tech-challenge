@@ -26,20 +26,22 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 	// Create the adapter
 	userLister := handlers.NewUserListerAdapter(usersService)
 
-	// List users
-	mux.Handle("/api/user", handlers.HandleListUsers(logger, userLister))
+	// List user (GET), Create user (POST), Delete user (DELETE), Update user (Put)
+	mux.Handle("GET /api/user", handlers.HandleListUsers(logger, userLister))
 
-	// Read a user by ID
-	mux.Handle("/api/user/", handlers.HandleReadUser(logger, usersService)) 
+	// Read a user by ID (GET)
+	mux.Handle("GET /api/user/{id}", handlers.HandleReadUser(logger, usersService))
 
-	// Create a user
-	mux.Handle("/api/user/create", handlers.HandleCreateUser(logger, usersService))
+	mux.Handle("PUT /api/user/{id}", handlers.HandleUpdateUser(logger, usersService))
 
-	// Update a user
-	mux.Handle("/api/user/update", handlers.HandleUpdateUser(logger, usersService))
+	// // Create a user
+	// mux.Handle("/api/user/create", handlers.HandleCreateUser(logger, usersService))
 
-	// Delete a user
-	mux.Handle("/api/user/delete", handlers.HandleDeleteUser(logger, usersService))
+	// // Update a user
+	// mux.Handle("/api/user/update", handlers.HandleUpdateUser(logger, usersService))
+
+	// // Delete a user
+	// mux.Handle("/api/user/delete", handlers.HandleDeleteUser(logger, usersService))
 
 	// Swagger docs
 	mux.Handle(
