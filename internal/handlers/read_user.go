@@ -39,12 +39,14 @@ type userReader interface {
 
 func HandleReadUser(logger *slog.Logger, userReader userReader) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        logger.InfoContext(r.Context(), "HandleReadUser called", slog.String("path", r.URL.Path))
+
         ctx := r.Context()
 
         // Extract the "id" from the URL path
         pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-        if len(pathParts) < 3 {
-            http.Error(w, "Invalid URL", http.StatusBadRequest)
+        if len(pathParts) < 3 || pathParts[2] == "" {
+            http.Error(w, "User ID not provided", http.StatusNotFound)
             return
         }
         idStr := pathParts[2]
@@ -52,13 +54,7 @@ func HandleReadUser(logger *slog.Logger, userReader userReader) http.Handler {
         // Convert the ID from string to uint64
         id, err := strconv.ParseUint(idStr, 10, 64)
         if err != nil {
-            logger.ErrorContext(
-                r.Context(),
-                "failed to parse id from url",
-                slog.String("id", idStr),
-                slog.String("error", err.Error()),
-            )
-
+            logger.ErrorContext(ctx, "failed to parse id from url", slog.String("id", idStr), slog.String("error", err.Error()))
             http.Error(w, "Invalid ID", http.StatusBadRequest)
             return
         }
@@ -66,33 +62,22 @@ func HandleReadUser(logger *slog.Logger, userReader userReader) http.Handler {
         // Read the user
         user, err := userReader.ReadUser(ctx, id)
         if err != nil {
-            logger.ErrorContext(
-                r.Context(),
-                "failed to read user",
-                slog.String("error", err.Error()),
-            )
-
-            http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            logger.ErrorContext(ctx, "failed to read user", slog.String("error", err.Error()))
+            http.Error(w, "User not found", http.StatusNotFound)
             return
         }
 
-        // Convert our models.User domain model into a response model.
+        // Write the response as JSON
         response := readUserResponse{
             ID:       user.ID,
             Name:     user.Name,
             Email:    user.Email,
             Password: user.Password,
         }
-
-        // Encode the response model as JSON
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusOK)
         if err := json.NewEncoder(w).Encode(response); err != nil {
-            logger.ErrorContext(
-                r.Context(),
-                "failed to encode response",
-                slog.String("error", err.Error()))
-
+            logger.ErrorContext(ctx, "failed to encode response", slog.String("error", err.Error()))
             http.Error(w, "Internal Server Error", http.StatusInternalServerError)
         }
     })

@@ -23,24 +23,23 @@ import (
 // @externalDocs.description	OpenAPI
 // @externalDocs.url			https://swagger.io/resources/open-api/
 func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.UsersService, baseURL string) {
-
 	// Create the adapter
 	userLister := handlers.NewUserListerAdapter(usersService)
 
-	// Read a user
-	mux.Handle("/api/user/name", handlers.HandleReadUser(logger, usersService)) // Note: trailing slash for dynamic paths
+	// List users
+	mux.Handle("/api/user", handlers.HandleListUsers(logger, userLister))
+
+	// Read a user by ID
+	mux.Handle("/api/user/", handlers.HandleReadUser(logger, usersService)) 
 
 	// Create a user
-	mux.Handle("/api/user", handlers.HandleCreateUser(logger, usersService))
+	mux.Handle("/api/user/create", handlers.HandleCreateUser(logger, usersService))
 
 	// Update a user
-	mux.Handle("/api/user/update", handlers.HandleUpdateUser(logger, usersService)) // Updated to singular "user"
+	mux.Handle("/api/user/update", handlers.HandleUpdateUser(logger, usersService))
 
 	// Delete a user
-	mux.Handle("/api/users/delete", handlers.HandleDeleteUser(logger, usersService)) // Note: trailing slash for dynamic paths
-
-	// List users
-	mux.Handle("/api/users", handlers.HandleListUsers(logger, userLister))
+	mux.Handle("/api/user/delete", handlers.HandleDeleteUser(logger, usersService))
 
 	// Swagger docs
 	mux.Handle(
