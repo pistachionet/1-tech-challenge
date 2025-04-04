@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // userDeleter represents a type capable of deleting a user from storage and
@@ -23,21 +24,42 @@ type userDeleter interface {
 // @Failure		500	{object}	string
 // @Router			/users/{id} [DELETE]
 func HandleDeleteUser(logger *slog.Logger, userDeleter userDeleter) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		idStr := r.URL.Query().Get("id")
-		id, err := strconv.ParseUint(idStr, 10, 64)
-		if err != nil {
-			logger.ErrorContext(r.Context(), "failed to parse id from url", slog.String("id", idStr), slog.String("error", err.Error()))
-			http.Error(w, "Invalid ID", http.StatusBadRequest)
-			return
-		}
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Get id from path using built-in PathValue (similar to update handler)
+        idStr := r.PathValue("id")
+        if idStr == "" {
+            http.Error(w, "User ID not provided", http.StatusNotFound)
+            return
+        }
 
-		if err := userDeleter.DeleteUser(r.Context(), id); err != nil {
-			logger.ErrorContext(r.Context(), "failed to delete user", slog.String("error", err.Error()))
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
+        id, err := strconv.ParseUint(idStr, 10, 64)
+        if err != nil {
+            logger.ErrorContext(r.Context(), "failed to parse id", 
+                slog.String("id", idStr), 
+                slog.String("error", err.Error()))
+            http.Error(w, "Invalid ID", http.StatusBadRequest)
+            return
+        }
 
-		w.WriteHeader(http.StatusNoContent)
-	})
+        if err := userDeleter.DeleteUser(r.Context(), id); err != nil {
+            logger.ErrorContext(r.Context(), "failed to delete user", 
+                slog.Uint64("id", id),
+                slog.String("error", err.Error()))
+                
+            // Handle not found error specifically
+            if strings.Contains(err.Error(), "no user found") {
+                http.Error(w, "User not found", http.StatusNotFound)
+                return
+            }
+            
+            http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+            return
+        }
+
+        // Log successful deletion
+        logger.InfoContext(r.Context(), "user deleted", slog.Uint64("id", id))
+        
+        // Return 204 No Content for successful deletion
+        w.WriteHeader(http.StatusNoContent)
+    })
 }
