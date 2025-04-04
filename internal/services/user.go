@@ -28,29 +28,29 @@ func NewUsersService(logger *slog.Logger, db *sql.DB) *UsersService {
 // CreateUser attempts to create the provided user, returning a fully hydrated
 // models.User or an error.
 func (s *UsersService) CreateUser(ctx context.Context, user models.User) (models.User, error) {
-    s.logger.DebugContext(ctx, "Creating user", "email", user.Email)
+	s.logger.DebugContext(ctx, "Creating user", "email", user.Email)
 
-    var createdUser models.User
-    err := s.db.QueryRowContext(
-        ctx,
-        `
+	var createdUser models.User
+	err := s.db.QueryRowContext(
+		ctx,
+		`
         INSERT INTO users (name, email, password)
         VALUES ($1, $2, $3)
         RETURNING id, name, email, password
         `,
-        user.Name,
-        user.Email,
-        user.Password,
-    ).Scan(&createdUser.ID, &createdUser.Name, &createdUser.Email, &createdUser.Password)
+		user.Name,
+		user.Email,
+		user.Password,
+	).Scan(&createdUser.ID, &createdUser.Name, &createdUser.Email, &createdUser.Password)
 
-    if err != nil {
-        return models.User{}, fmt.Errorf(
-            "[in services.UsersService.CreateUser] failed to create user: %w",
-            err,
-        )
-    }
+	if err != nil {
+		return models.User{}, fmt.Errorf(
+			"[in services.UsersService.CreateUser] failed to create user: %w",
+			err,
+		)
+	}
 
-    return createdUser, nil
+	return createdUser, nil
 }
 
 // ReadUser attempts to read a user from the database using the provided id. A
@@ -93,87 +93,58 @@ func (s *UsersService) ReadUser(ctx context.Context, id uint64) (models.User, er
 // updating, it to reflect the properties on the provided patch object. A
 // models.User or an error.
 func (s *UsersService) UpdateUser(ctx context.Context, id uint64, patch models.User) (models.User, error) {
-    s.logger.DebugContext(ctx, "Updating user", "id", id)
+	s.logger.DebugContext(ctx, "Updating user", "id", id)
 
-    var updatedUser models.User
-    err := s.db.QueryRowContext(
-        ctx,
-        `
+	var updatedUser models.User
+	err := s.db.QueryRowContext(
+		ctx,
+		`
         UPDATE users 
         SET name = $2, email = $3, password = $4
         WHERE id = $1
         RETURNING id, name, email, password
         `,
-        id,
-        patch.Name,
-        patch.Email, 
-        patch.Password,
-    ).Scan(&updatedUser.ID, &updatedUser.Name, &updatedUser.Email, &updatedUser.Password)
+		id,
+		patch.Name,
+		patch.Email,
+		patch.Password,
+	).Scan(&updatedUser.ID, &updatedUser.Name, &updatedUser.Email, &updatedUser.Password)
 
-    if err != nil {
-        if err == sql.ErrNoRows {
-            return models.User{}, fmt.Errorf("no user found with id: %d", id)
-        }
-        return models.User{}, fmt.Errorf("failed to update user: %w", err)
-    }
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.User{}, fmt.Errorf("no user found with id: %d", id)
+		}
+		return models.User{}, fmt.Errorf("failed to update user: %w", err)
+	}
 
-    return updatedUser, nil
+	return updatedUser, nil
 }
 
 // DeleteUser attempts to delete the user with the provided id. An error is
 // returned if the delete fails.
 func (s *UsersService) DeleteUser(ctx context.Context, id uint64) error {
-    s.logger.DebugContext(ctx, "Deleting user and related data", "id", id)
+    s.logger.DebugContext(ctx, "Deleting user", "id", id)
 
-    // Start a transaction to ensure all or nothing deletion
-    tx, err := s.db.BeginTx(ctx, nil)
+    // Simple direct deletion for now
+    result, err := s.db.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, id)
     if err != nil {
-        return fmt.Errorf("failed to start transaction: %w", err)
-    }
-    
-    // Ensure transaction either commits or rolls back
-    defer func() {
-        if err != nil {
-            tx.Rollback()
-        }
-    }()
-
-    // Delete related comments first
-    _, err = tx.ExecContext(ctx, 
-        `DELETE FROM comments WHERE user_id = $1`, id)
-    if err != nil {
-        return fmt.Errorf("failed to delete user comments: %w", err)
-    }
-
-    // Delete related blogs
-    _, err = tx.ExecContext(ctx, 
-        `DELETE FROM blogs WHERE user_id = $1`, id)
-    if err != nil {
-        return fmt.Errorf("failed to delete user blogs: %w", err)
-    }
-
-    // Finally delete the user
-    result, err := tx.ExecContext(ctx, 
-        `DELETE FROM users WHERE id = $1`, id)
-    if err != nil {
+        s.logger.ErrorContext(ctx, "failed to delete user", slog.String("error", err.Error()))
         return fmt.Errorf("failed to delete user: %w", err)
     }
 
     // Check if user was found
     rowsAffected, err := result.RowsAffected()
     if err != nil {
+        s.logger.ErrorContext(ctx, "failed to get affected rows", slog.String("error", err.Error()))
         return fmt.Errorf("failed to get affected rows: %w", err)
     }
 
     if rowsAffected == 0 {
+        s.logger.ErrorContext(ctx, "no user found with id", slog.Uint64("id", id))
         return fmt.Errorf("no user found with id: %d", id)
     }
 
-    // Commit the transaction
-    if err = tx.Commit(); err != nil {
-        return fmt.Errorf("failed to commit transaction: %w", err)
-    }
-
+    s.logger.InfoContext(ctx, "user deleted successfully", slog.Uint64("id", id))
     return nil
 }
 

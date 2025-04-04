@@ -25,7 +25,7 @@ type userDeleter interface {
 // @Router			/users/{id} [DELETE]
 func HandleDeleteUser(logger *slog.Logger, userDeleter userDeleter) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        // Get id from path using built-in PathValue (similar to update handler)
+        // Get id from path using built-in PathValue
         idStr := r.PathValue("id")
         if idStr == "" {
             http.Error(w, "User ID not provided", http.StatusNotFound)
