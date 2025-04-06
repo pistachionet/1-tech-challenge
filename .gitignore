@@ -22,3 +22,6 @@ app.env
 
 **/.env
 .idea
+
+
+.vscode
