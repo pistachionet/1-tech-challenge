@@ -42,7 +42,6 @@ func (s *UsersService) CreateUser(ctx context.Context, user models.User) (models
 		user.Email,
 		user.Password,
 	).Scan(&createdUser.ID, &createdUser.Name, &createdUser.Email, &createdUser.Password)
-
 	if err != nil {
 		return models.User{}, fmt.Errorf(
 			"[in services.UsersService.CreateUser] failed to create user: %w",
@@ -109,7 +108,6 @@ func (s *UsersService) UpdateUser(ctx context.Context, id uint64, patch models.U
 		patch.Email,
 		patch.Password,
 	).Scan(&updatedUser.ID, &updatedUser.Name, &updatedUser.Email, &updatedUser.Password)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return models.User{}, fmt.Errorf("no user found with id: %d", id)
@@ -123,29 +121,29 @@ func (s *UsersService) UpdateUser(ctx context.Context, id uint64, patch models.U
 // DeleteUser attempts to delete the user with the provided id. An error is
 // returned if the delete fails.
 func (s *UsersService) DeleteUser(ctx context.Context, id uint64) error {
-    s.logger.DebugContext(ctx, "Deleting user", "id", id)
+	s.logger.DebugContext(ctx, "Deleting user", "id", id)
 
-    // Simple direct deletion for now
-    result, err := s.db.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, id)
-    if err != nil {
-        s.logger.ErrorContext(ctx, "failed to delete user", slog.String("error", err.Error()))
-        return fmt.Errorf("failed to delete user: %w", err)
-    }
+	// Simple direct deletion for now
+	result, err := s.db.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, id)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to delete user", slog.String("error", err.Error()))
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
 
-    // Check if user was found
-    rowsAffected, err := result.RowsAffected()
-    if err != nil {
-        s.logger.ErrorContext(ctx, "failed to get affected rows", slog.String("error", err.Error()))
-        return fmt.Errorf("failed to get affected rows: %w", err)
-    }
+	// Check if user was found
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get affected rows", slog.String("error", err.Error()))
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
 
-    if rowsAffected == 0 {
-        s.logger.ErrorContext(ctx, "no user found with id", slog.Uint64("id", id))
-        return fmt.Errorf("no user found with id: %d", id)
-    }
+	if rowsAffected == 0 {
+		s.logger.ErrorContext(ctx, "no user found with id", slog.Uint64("id", id))
+		return fmt.Errorf("no user found with id: %d", id)
+	}
 
-    s.logger.InfoContext(ctx, "user deleted successfully", slog.Uint64("id", id))
-    return nil
+	s.logger.InfoContext(ctx, "user deleted successfully", slog.Uint64("id", id))
+	return nil
 }
 
 // ListUsers attempts to list all users in the database. A slice of models.User

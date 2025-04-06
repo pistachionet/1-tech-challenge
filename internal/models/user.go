@@ -7,10 +7,10 @@ import (
 
 // User represents a user in the system.
 type User struct {
-    ID       uint   `json:"id,omitempty"`
-    Name     string `json:"name" validate:"required"`
-    Email    string `json:"email" validate:"required,email"`
-    Password string `json:"password" validate:"required,min=6"`
+	ID       uint   `json:"id,omitempty"`
+	Name     string `json:"name" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
 }
 
 // Valid checks the User object and returns any problems.

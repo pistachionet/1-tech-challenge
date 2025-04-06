@@ -22,16 +22,17 @@ import (
 // @BasePath					/api
 // @externalDocs.description	OpenAPI
 // @externalDocs.url			https://swagger.io/resources/open-api/
-func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.UsersService, baseURL string) {
-	// Create the adapter
-	userLister := handlers.NewUserListerAdapter(usersService)
-
-    mux.Handle("POST /api/user", handlers.HandleCreateUser(logger, usersService))
-    mux.Handle("GET /api/user", handlers.HandleListUsers(logger, userLister))
-    mux.Handle("GET /api/user/{id}", handlers.HandleReadUser(logger, usersService))
-    mux.Handle("PUT /api/user/{id}", handlers.HandleUpdateUser(logger, usersService))
+func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.UsersService, blogsService *services.BlogService, baseURL string) {
+	// User endpoints
+	mux.Handle("POST /api/user", handlers.HandleCreateUser(logger, usersService))
+	mux.Handle("GET /api/user", handlers.HandleListUsers(logger, handlers.NewUserListerAdapter(usersService)))
+	mux.Handle("GET /api/user/{id}", handlers.HandleReadUser(logger, usersService))
+	mux.Handle("PUT /api/user/{id}", handlers.HandleUpdateUser(logger, usersService))
 	mux.Handle("DELETE /api/user/{id}", handlers.HandleDeleteUser(logger, usersService))
 
+	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/blog"))
+	// Blog endpoints
+	mux.Handle("GET /api/blog", handlers.HandleListBlogs(logger, handlers.NewBlogListerAdapter(blogsService)))
 
 	// Swagger docs
 	mux.Handle(

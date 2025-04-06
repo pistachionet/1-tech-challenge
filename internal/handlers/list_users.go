@@ -40,10 +40,9 @@ func NewUserListerAdapter(service *services.UsersService) userLister {
 // @Router			/users [GET]
 func HandleListUsers(logger *slog.Logger, userLister userLister) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        logger.InfoContext(r.Context(), "HandleListUsers called", slog.String("path", r.URL.Path))
+		logger.InfoContext(r.Context(), "HandleListUsers called", slog.String("path", r.URL.Path))
 
-        
-        // Get the "name" query parameter
+		// Get the "name" query parameter
 		name := r.URL.Query().Get("name")
 
 		// Retrieve users from the userLister
