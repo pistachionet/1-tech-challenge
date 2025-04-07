@@ -6,7 +6,7 @@ import (
 
 	"github.com/navid/blog/internal/handlers"
 	"github.com/navid/blog/internal/services"
-	"github.com/swaggo/http-swagger" // http-swagger middleware
+	httpSwagger "github.com/swaggo/http-swagger" // http-swagger middleware
 )
 
 // @title						Blog Service API
@@ -30,9 +30,24 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 	mux.Handle("PUT /api/user/{id}", handlers.HandleUpdateUser(logger, usersService))
 	mux.Handle("DELETE /api/user/{id}", handlers.HandleDeleteUser(logger, usersService))
 
-	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/blog"))
 	// Blog endpoints
+	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/blog"))
 	mux.Handle("GET /api/blog", handlers.HandleListBlogs(logger, handlers.NewBlogListerAdapter(blogsService)))
+
+	// Note the specific pattern format - this is crucial
+	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/blog/{id}"))
+	mux.Handle("GET /api/blog/{id}", handlers.HandleGetBlog(logger, blogsService))
+
+	logger.Info("Registering route", slog.String("method", "PUT"), slog.String("path", "/api/blog/{id}"))
+	mux.Handle("PUT /api/blog/{id}", handlers.HandleUpdateBlog(logger, blogsService, usersService))
+
+	// For debugging purposes, let's add a catch-all handler to help identify mismatched routes
+	mux.HandleFunc("GET /api/blog/", func(w http.ResponseWriter, r *http.Request) {
+		logger.InfoContext(r.Context(), "Caught by catch-all handler",
+			slog.String("path", r.URL.Path),
+			slog.String("method", r.Method))
+		http.Error(w, "Route not found. Please use /api/blog/{id} format", http.StatusNotFound)
+	})
 
 	// Swagger docs
 	mux.Handle(

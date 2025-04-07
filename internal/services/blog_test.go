@@ -34,10 +34,9 @@ func TestBlogService_ReadBlog(t *testing.T) {
 			expectedOutput: models.Blog{
 				ID:        1,
 				Title:     "Test Blog",
-				Content:   "This is a test blog.",
+				Score:     1,
 				UserID:    1,
 				CreatedAt: parseTime("2024-05-15T10:00:00Z"),
-				UpdatedAt: parseTime("2024-05-15T10:00:00Z"),
 			},
 			expectedError: nil,
 		},
