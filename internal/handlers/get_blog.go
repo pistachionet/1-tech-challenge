@@ -11,6 +11,11 @@ import (
 	"github.com/navid/blog/internal/models"
 )
 
+/*
+GET	http://localhost:8000/api/blog/{id}
+Return a given Blog object based on id.
+*/
+
 // blogReader represents a type capable of reading a blog from storage
 type blogReader interface {
 	GetBlog(ctx context.Context, id uint) (models.Blog, error)

@@ -10,6 +10,11 @@ import (
 	"github.com/navid/blog/internal/services"
 )
 
+/*
+GET	http://localhost:8000/api/blog
+Return all Blog objects from the database. If the title parameter is provided, filter list by title.
+*/
+
 // blogLister represents a type capable of listing blogs from storage and
 // returning them or an error.
 type blogLister interface {
