@@ -41,6 +41,9 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 	logger.Info("Registering route", slog.String("method", "PUT"), slog.String("path", "/api/blog/{id}"))
 	mux.Handle("PUT /api/blog/{id}", handlers.HandleUpdateBlog(logger, blogsService, usersService))
 
+	logger.Info("Registering route", slog.String("method", "POST"), slog.String("path", "/api/blog"))
+	mux.Handle("POST /api/blog", handlers.HandleCreateBlog(logger, blogsService, usersService))
+
 	// For debugging purposes, let's add a catch-all handler to help identify mismatched routes
 	mux.HandleFunc("GET /api/blog/", func(w http.ResponseWriter, r *http.Request) {
 		logger.InfoContext(r.Context(), "Caught by catch-all handler",

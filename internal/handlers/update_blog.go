@@ -70,10 +70,10 @@ func HandleUpdateBlog(logger *slog.Logger, blogUpdater blogUpdater, userReader u
 		}
 
 		// Validate that the author exists
-		_, err = userReader.ReadUser(ctx, uint64(blog.UserID))
+		_, err = userReader.ReadUser(ctx, uint64(blog.AuthorID))
 		if err != nil {
 			logger.ErrorContext(ctx, "author validation failed",
-				slog.Uint64("author_id", uint64(blog.UserID)),
+				slog.Uint64("author_id", uint64(blog.AuthorID)),
 				slog.String("error", err.Error()))
 			http.Error(w, "Author not found", http.StatusBadRequest)
 			return

@@ -11,7 +11,7 @@ type Blog struct {
 	ID        uint      `json:"id,omitempty"`
 	Title     string    `json:"title" validate:"required"`
 	Score     float64   `json:"score"` // Ensure this matches the database type
-	UserID    uint      `json:"author_id" validate:"required"`
+	AuthorID  int       `json:"author_id" validate:"required"`
 	CreatedAt time.Time `json:"created_date"` // Ensure this matches the database type
 }
 
@@ -23,7 +23,7 @@ func (b Blog) Valid(ctx context.Context) map[string]string {
 		problems["title"] = "title is required"
 	}
 
-	if b.UserID == 0 {
+	if b.AuthorID == 0 {
 		problems["author_id"] = "author_id is required"
 	}
 

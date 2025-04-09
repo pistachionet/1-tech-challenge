@@ -35,7 +35,7 @@ func TestBlogService_ReadBlog(t *testing.T) {
 				ID:        1,
 				Title:     "Test Blog",
 				Score:     1,
-				UserID:    1,
+				AuthorID:  1,
 				CreatedAt: parseTime("2024-05-15T10:00:00Z"),
 			},
 			expectedError: nil,

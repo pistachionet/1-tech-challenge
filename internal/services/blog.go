@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/navid/blog/internal/models"
 )
@@ -26,15 +27,17 @@ func NewBlogService(db *sql.DB, logger *slog.Logger) *BlogService {
 func (s *BlogService) CreateBlog(ctx context.Context, blog models.Blog) (models.Blog, error) {
 	s.logger.DebugContext(ctx, "Creating blog", "title", blog.Title)
 
+	// Set the CreatedAt field to the current time
+	blog.CreatedAt = time.Now()
+
 	var createdBlog models.Blog
 	err := s.db.QueryRowContext(
 		ctx,
 		`INSERT INTO blogs (title, score, author_id, created_date)
          VALUES ($1, $2, $3, $4)
          RETURNING id, title, score, author_id, created_date`,
-		blog.Title, blog.Score, blog.UserID, blog.CreatedAt,
-	).Scan(&createdBlog.ID, &createdBlog.Title, &createdBlog.Score, &createdBlog.UserID, &createdBlog.CreatedAt)
-
+		blog.Title, blog.Score, blog.AuthorID, blog.CreatedAt,
+	).Scan(&createdBlog.ID, &createdBlog.Title, &createdBlog.Score, &createdBlog.AuthorID, &createdBlog.CreatedAt)
 	if err != nil {
 		return models.Blog{}, fmt.Errorf("failed to create blog: %w", err)
 	}
@@ -53,7 +56,7 @@ func (s *BlogService) GetBlog(ctx context.Context, id uint) (models.Blog, error)
          FROM blogs
          WHERE id = $1`,
 		id,
-	).Scan(&blog.ID, &blog.Title, &blog.Score, &blog.UserID, &blog.CreatedAt)
+	).Scan(&blog.ID, &blog.Title, &blog.Score, &blog.AuthorID, &blog.CreatedAt)
 
 	if err == sql.ErrNoRows {
 		return models.Blog{}, fmt.Errorf("no blog found with id: %d", id)
@@ -76,7 +79,7 @@ func (s *BlogService) UpdateBlog(ctx context.Context, id uint, blog models.Blog)
          WHERE id = $4
          RETURNING id, title, score, author_id, created_date`,
 		blog.Title, blog.Score, blog.CreatedAt, id,
-	).Scan(&updatedBlog.ID, &updatedBlog.Title, &updatedBlog.Score, &updatedBlog.UserID, &updatedBlog.CreatedAt)
+	).Scan(&updatedBlog.ID, &updatedBlog.Title, &updatedBlog.Score, &updatedBlog.AuthorID, &updatedBlog.CreatedAt)
 
 	if err == sql.ErrNoRows {
 		return models.Blog{}, fmt.Errorf("no blog found with id: %d", id)
@@ -129,7 +132,7 @@ func (s *BlogService) ListBlogsWithFilter(ctx context.Context, title string) ([]
 	var blogs []models.Blog
 	for rows.Next() {
 		var blog models.Blog
-		if err := rows.Scan(&blog.ID, &blog.Title, &blog.Score, &blog.UserID, &blog.CreatedAt); err != nil {
+		if err := rows.Scan(&blog.ID, &blog.Title, &blog.Score, &blog.AuthorID, &blog.CreatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan blog: %w", err)
 		}
 		blogs = append(blogs, blog)

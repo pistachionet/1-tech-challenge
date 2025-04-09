@@ -221,3 +221,21 @@ func (s *UsersService) ListUsersWithFilter(ctx context.Context, name string) ([]
 
 	return users, nil
 }
+
+// DoesUserExist checks if a user exists in the database by userID.
+func (s *UsersService) DoesUserExist(ctx context.Context, userID int) bool {
+	s.logger.DebugContext(ctx, "Checking if user exists", "user_id", userID)
+
+	var exists bool
+	err := s.db.QueryRowContext(
+		ctx,
+		`SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`,
+		userID,
+	).Scan(&exists)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "Failed to check user existence", slog.String("error", err.Error()))
+		return false
+	}
+
+	return exists
+}
