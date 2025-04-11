@@ -94,6 +94,16 @@ func (s *BlogService) UpdateBlog(ctx context.Context, id uint, blog models.Blog)
 func (s *BlogService) DeleteBlog(ctx context.Context, id uint) error {
 	s.logger.DebugContext(ctx, "Deleting blog", "id", id)
 
+	// Uncomment this logic when the Comment table is implemented
+	/*
+	   // Delete associated comments
+	   _, err := s.db.ExecContext(ctx, `DELETE FROM comments WHERE blog_id = $1`, id)
+	   if err != nil {
+	       return fmt.Errorf("failed to delete comments for blog: %w", err)
+	   }
+	*/
+
+	// Delete the blog
 	result, err := s.db.ExecContext(ctx, `DELETE FROM blogs WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete blog: %w", err)

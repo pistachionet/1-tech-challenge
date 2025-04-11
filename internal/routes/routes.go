@@ -34,7 +34,6 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/blog"))
 	mux.Handle("GET /api/blog", handlers.HandleListBlogs(logger, handlers.NewBlogListerAdapter(blogsService)))
 
-	// Note the specific pattern format - this is crucial
 	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/blog/{id}"))
 	mux.Handle("GET /api/blog/{id}", handlers.HandleGetBlog(logger, blogsService))
 
@@ -43,6 +42,9 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 
 	logger.Info("Registering route", slog.String("method", "POST"), slog.String("path", "/api/blog"))
 	mux.Handle("POST /api/blog", handlers.HandleCreateBlog(logger, blogsService, usersService))
+
+	logger.Info("Registering route", slog.String("method", "DELETE"), slog.String("path", "/api/blog/{id}"))
+	mux.Handle("DELETE /api/blog/{id}", handlers.HandleDeleteBlog(logger, blogsService))
 
 	// For debugging purposes, let's add a catch-all handler to help identify mismatched routes
 	mux.HandleFunc("GET /api/blog/", func(w http.ResponseWriter, r *http.Request) {
