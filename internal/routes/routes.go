@@ -22,7 +22,7 @@ import (
 // @BasePath					/api
 // @externalDocs.description	OpenAPI
 // @externalDocs.url			https://swagger.io/resources/open-api/
-func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.UsersService, blogsService *services.BlogService, baseURL string) {
+func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.UsersService, blogsService *services.BlogService, commentsService *services.CommentsService, baseURL string) {
 	// User endpoints
 	mux.Handle("POST /api/user", handlers.HandleCreateUser(logger, usersService))
 	mux.Handle("GET /api/user", handlers.HandleListUsers(logger, handlers.NewUserListerAdapter(usersService)))
@@ -45,6 +45,9 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 
 	logger.Info("Registering route", slog.String("method", "DELETE"), slog.String("path", "/api/blog/{id}"))
 	mux.Handle("DELETE /api/blog/{id}", handlers.HandleDeleteBlog(logger, blogsService))
+
+	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/comments"))
+	mux.Handle("GET /api/comments", handlers.HandleListComments(logger, commentsService))
 
 	// For debugging purposes, let's add a catch-all handler to help identify mismatched routes
 	mux.HandleFunc("GET /api/blog/", func(w http.ResponseWriter, r *http.Request) {

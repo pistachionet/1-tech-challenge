@@ -75,6 +75,9 @@ func run(ctx context.Context) error {
 	// Create a new blog service
 	blogService := services.NewBlogService(db, logger)
 
+	// Create a new comments service
+	commentsService := services.NewCommentsService(db, logger)
+
 	// Create a serve mux to act as our route multiplexer
 	mux := http.NewServeMux()
 
@@ -84,6 +87,7 @@ func run(ctx context.Context) error {
 		logger,
 		usersService,
 		blogService,
+		commentsService,
 		fmt.Sprintf("http://%s:%s", cfg.Host, cfg.Port),
 	)
 
