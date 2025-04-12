@@ -92,33 +92,30 @@ func (s *BlogService) UpdateBlog(ctx context.Context, id uint, blog models.Blog)
 
 // DeleteBlog deletes a blog by its ID.
 func (s *BlogService) DeleteBlog(ctx context.Context, id uint) error {
-	s.logger.DebugContext(ctx, "Deleting blog", "id", id)
+    s.logger.DebugContext(ctx, "Deleting blog", "id", id)
 
-	// Uncomment this logic when the Comment table is implemented
-	/*
-	   // Delete associated comments
-	   _, err := s.db.ExecContext(ctx, `DELETE FROM comments WHERE blog_id = $1`, id)
-	   if err != nil {
-	       return fmt.Errorf("failed to delete comments for blog: %w", err)
-	   }
-	*/
+    // Delete associated comments
+    _, err := s.db.ExecContext(ctx, `DELETE FROM comments WHERE blog_id = $1`, id)
+    if err != nil {
+        return fmt.Errorf("failed to delete comments for blog: %w", err)
+    }
 
-	// Delete the blog
-	result, err := s.db.ExecContext(ctx, `DELETE FROM blogs WHERE id = $1`, id)
-	if err != nil {
-		return fmt.Errorf("failed to delete blog: %w", err)
-	}
+    // Delete the blog
+    result, err := s.db.ExecContext(ctx, `DELETE FROM blogs WHERE id = $1`, id)
+    if err != nil {
+        return fmt.Errorf("failed to delete blog: %w", err)
+    }
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to get affected rows: %w", err)
-	}
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return fmt.Errorf("failed to get affected rows: %w", err)
+    }
 
-	if rowsAffected == 0 {
-		return fmt.Errorf("no blog found with id: %d", id)
-	}
+    if rowsAffected == 0 {
+        return fmt.Errorf("no blog found with id: %d", id)
+    }
 
-	return nil
+    return nil
 }
 
 // ListBlogsWithFilter retrieves all blogs, optionally filtering by title.
