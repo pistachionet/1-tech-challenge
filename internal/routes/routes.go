@@ -31,31 +31,16 @@ func AddRoutes(mux *http.ServeMux, logger *slog.Logger, usersService *services.U
 	mux.Handle("DELETE /api/user/{id}", handlers.HandleDeleteUser(logger, usersService))
 
 	// Blog endpoints
-	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/blog"))
 	mux.Handle("GET /api/blog", handlers.HandleListBlogs(logger, handlers.NewBlogListerAdapter(blogsService)))
-
-	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/blog/{id}"))
 	mux.Handle("GET /api/blog/{id}", handlers.HandleGetBlog(logger, blogsService))
-
-	logger.Info("Registering route", slog.String("method", "PUT"), slog.String("path", "/api/blog/{id}"))
 	mux.Handle("PUT /api/blog/{id}", handlers.HandleUpdateBlog(logger, blogsService, usersService))
-
-	logger.Info("Registering route", slog.String("method", "POST"), slog.String("path", "/api/blog"))
 	mux.Handle("POST /api/blog", handlers.HandleCreateBlog(logger, blogsService, usersService))
-
-	logger.Info("Registering route", slog.String("method", "DELETE"), slog.String("path", "/api/blog/{id}"))
 	mux.Handle("DELETE /api/blog/{id}", handlers.HandleDeleteBlog(logger, blogsService))
 
-	logger.Info("Registering route", slog.String("method", "GET"), slog.String("path", "/api/comments"))
+	// Comment endpoints
 	mux.Handle("GET /api/comments", handlers.HandleListComments(logger, commentsService))
-
-	logger.Info("Registering route", slog.String("method", "PUT"), slog.String("path", "/api/comments"))
 	mux.Handle("PUT /api/comments", handlers.HandleUpdateComment(logger, commentsService, usersService, blogsService))
-
-	logger.Info("Registering route", slog.String("method", "POST"), slog.String("path", "/api/comments"))
 	mux.Handle("POST /api/comments", handlers.HandleCreateComment(logger, commentsService, usersService, blogsService))
-
-	logger.Info("Registering route", slog.String("method", "DELETE"), slog.String("path", "/api/comments"))
 	mux.Handle("DELETE /api/comments", handlers.HandleDeleteComment(logger, commentsService))
 
 	// For debugging purposes, let's add a catch-all handler to help identify mismatched routes
