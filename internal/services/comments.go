@@ -132,3 +132,27 @@ func (s *CommentsService) DoesCommentExist(ctx context.Context, userID, blogID i
 
 	return exists, nil
 }
+
+func (s *CommentsService) DeleteComment(ctx context.Context, userID, blogID int) error {
+	s.logger.DebugContext(ctx, "Deleting comment", slog.Int("user_id", userID), slog.Int("blog_id", blogID))
+
+	result, err := s.db.ExecContext(
+		ctx,
+		`DELETE FROM comments WHERE user_id = $1 AND blog_id = $2`,
+		userID, blogID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete comment: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no comment found")
+	}
+
+	return nil
+}
