@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/navid/blog/internal/models"
 )
@@ -90,4 +91,44 @@ func (s *CommentsService) UpdateComment(ctx context.Context, comment models.Comm
 	}
 
 	return updatedComment, nil
+}
+
+func (s *CommentsService) CreateComment(ctx context.Context, comment models.Comment) (models.Comment, error) {
+	s.logger.DebugContext(ctx, "Creating comment", slog.Int("user_id", comment.UserID), slog.Int("blog_id", comment.BlogID))
+
+	// Set the CreatedDate field to the current time
+	comment.CreatedDate = time.Now()
+	s.logger.DebugContext(ctx, "Setting created_date", slog.Time("created_date", comment.CreatedDate))
+
+	var createdComment models.Comment
+	err := s.db.QueryRowContext(
+		ctx,
+		`INSERT INTO comments (user_id, blog_id, message, created_date)
+         VALUES ($1, $2, $3, $4)
+         RETURNING user_id, blog_id, message, created_date`,
+		comment.UserID, comment.BlogID, comment.Message, comment.CreatedDate,
+	).Scan(&createdComment.UserID, &createdComment.BlogID, &createdComment.Message, &createdComment.CreatedDate)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "Failed to execute INSERT query", slog.String("error", err.Error()))
+		return models.Comment{}, fmt.Errorf("failed to create comment: %w", err)
+	}
+
+	return createdComment, nil
+}
+
+// DoesCommentExist checks if a comment with the given user_id and blog_id already exists.
+func (s *CommentsService) DoesCommentExist(ctx context.Context, userID, blogID int) (bool, error) {
+	s.logger.DebugContext(ctx, "Checking if comment exists", slog.Int("user_id", userID), slog.Int("blog_id", blogID))
+
+	var exists bool
+	err := s.db.QueryRowContext(
+		ctx,
+		`SELECT EXISTS(SELECT 1 FROM comments WHERE user_id = $1 AND blog_id = $2)`,
+		userID, blogID,
+	).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check comment existence: %w", err)
+	}
+
+	return exists, nil
 }

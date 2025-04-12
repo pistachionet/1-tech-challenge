@@ -33,3 +33,26 @@ If you are new to Go, you might be surprised by some concepts or syntaxes that d
 ## Next Steps
 
 After reading over the overview, proceed to part 1: [Technical Setup](docs/1-Technical-Setup.md). This will cover all the installations and setup necessary for the challenge.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Query to find valid user_id and blog_id pair:
+
+For the POST Comments Endpoint: 
+
+SELECT u.id AS user_id, b.id AS blog_id
+FROM users u
+CROSS JOIN blogs b
+LEFT JOIN comments c ON c.user_id = u.id AND c.blog_id = b.id
+WHERE c.user_id IS NULL AND c.blog_id IS NULL
+LIMIT 1;
